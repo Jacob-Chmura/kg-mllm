@@ -1,14 +1,11 @@
-import json
-import os
-from typing import Dict
-
 import evaluate
 import numpy as np
-from adapters import AdapterConfig, AdapterTrainer, AutoAdapterModel, Trainer
+from adapters import AdapterConfig, AdapterTrainer, AutoAdapterModel
 from adapters.composition import Stack
-from datasets import Dataset, load_dataset
+from datasets import load_dataset
 from transformers import AutoConfig, AutoTokenizer, TrainingArguments
 
+from kg_mllm.test import evaluate_model
 from kg_mllm.util.data import tokenize_dataset
 
 # TODO: Consolidate and move to config
@@ -24,25 +21,6 @@ per_device_eval_batch_size = 32
 evaluation_strategy = 'epoch'
 save_strategy = 'no'
 weight_decay = 0.01
-
-
-def calculate_f1_on_test_set(
-    trainer: Trainer, test_dataset: Dataset
-) -> Dict[str, float]:
-    print('Calculating F1 score on the test set...')
-    test_predictions = trainer.predict(test_dataset)
-
-    f1_metric = evaluate.load('f1')
-    test_metrics = {
-        'f1': f1_metric.compute(
-            predictions=np.argmax(test_predictions.predictions, axis=-1),
-            references=test_predictions.label_ids,
-            average='macro',
-        )['f1'],
-    }
-
-    print('Test F1 score:', test_metrics['f1'])
-    return test_metrics
 
 
 def main() -> None:
@@ -112,13 +90,8 @@ def main() -> None:
         },
     )
 
-    # train model
     trainer.train()
-
-    # test model
-    output_file_path = os.path.join(output_dir, 'test_metrics.json')
-    with open(output_file_path, 'w') as json_file:
-        json.dump(calculate_f1_on_test_set(trainer, test_dataset), json_file, indent=2)
+    evaluate_model(trainer, test_dataset, output_dir)
 
 
 if __name__ == '__main__':
