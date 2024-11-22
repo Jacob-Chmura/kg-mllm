@@ -9,8 +9,12 @@ authors = [
     { name = "Jacob Chmura", email = "jacobpaul.chmura@gmail.com" },
 ]
 dependencies = [
+    "adapters>=1.0.1",
+    "datasets>=3.1.0",
+    "evaluate>=0.4.3",
     "numpy>=2.0.2",
     "torch>=2.5.1",
+    "transformers>=4.45.2",
 ]
 
 [build-system]
@@ -25,13 +29,7 @@ dev = [
     "pytest-cov>=6.0.0",
     "pytest>=8.3.3",
     "ruff>=0.7.3",
-    "yapf>=0.43.0",
 ]
-
-[tool.yapf]
-based_on_style = "pep8"
-split_before_named_assigns = false
-blank_line_before_nested_class_or_def = false
 
 [tool.mypy]
 files = ["kg_mllm"]
