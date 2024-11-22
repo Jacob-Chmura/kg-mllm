@@ -26,7 +26,17 @@ save_strategy = 'no'
 weight_decay = 0.01
 
 
+def create_model():
+    config = AutoConfig.from_pretrained(model_name)
+    model = BertForSequenceClassification(config=config)
+    model.config.hidden_dropout_prob = 0.5
+    print(model.adapter_summary())
+    return model
+
+
 def main() -> None:
+    model = create_model()
+
     dataset = load_dataset(f'dgurgurov/{language}_sa')
     train_dataset = dataset['train']
     val_dataset = dataset['validation']
@@ -37,11 +47,6 @@ def main() -> None:
     train_dataset = tokenize_dataset(train_dataset, tokenizer)
     val_dataset = tokenize_dataset(val_dataset, tokenizer)
     test_dataset = tokenize_dataset(test_dataset, tokenizer)
-
-    # prepare model
-    config = AutoConfig.from_pretrained(model_name)
-    model = BertForSequenceClassification(config=config)
-    model.config.hidden_dropout_prob = 0.5
 
     training_args = TrainingArguments(
         learning_rate=learning_rate,

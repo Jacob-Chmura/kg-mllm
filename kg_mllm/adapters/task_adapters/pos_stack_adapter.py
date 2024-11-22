@@ -23,20 +23,9 @@ save_strategy = 'no'
 weight_decay = 0.01
 
 
-def main() -> None:
+def create_model():
     config = AutoConfig.from_pretrained(model_name)
     model = AutoAdapterModel.from_pretrained(model_name, config=config)
-
-    dataset = load_dataset(f'dgurgurov/{language}_sa')
-    train_dataset = dataset['train']
-    val_dataset = dataset['validation']
-    test_dataset = dataset['test']
-
-    tokenizer = AutoTokenizer.from_pretrained('bert-base-multilingual-cased')
-
-    train_dataset = tokenize_dataset(train_dataset, tokenizer)
-    val_dataset = tokenize_dataset(val_dataset, tokenizer)
-    test_dataset = tokenize_dataset(test_dataset, tokenizer)
 
     # load pre-trained language adapter
     lang_adapter_config = AdapterConfig.load(adapter_config)
@@ -59,6 +48,22 @@ def main() -> None:
     model.active_adapters = Stack('lang_adapter', 'sa')
 
     print(model.adapter_summary())
+    return model
+
+
+def main() -> None:
+    model = create_model()
+
+    dataset = load_dataset(f'dgurgurov/{language}_sa')
+    train_dataset = dataset['train']
+    val_dataset = dataset['validation']
+    test_dataset = dataset['test']
+
+    tokenizer = AutoTokenizer.from_pretrained('bert-base-multilingual-cased')
+
+    train_dataset = tokenize_dataset(train_dataset, tokenizer)
+    val_dataset = tokenize_dataset(val_dataset, tokenizer)
+    test_dataset = tokenize_dataset(test_dataset, tokenizer)
 
     training_args = TrainingArguments(
         learning_rate=learning_rate,
