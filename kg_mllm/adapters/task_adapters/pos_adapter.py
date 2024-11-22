@@ -6,21 +6,17 @@ from kg_mllm.train import train_model
 from kg_mllm.util.data import load_train_val_test
 
 # TODO: Consolidate and move to config
-language = 'FOO'
 output_dir = './training_output'
-adapter_dir = ''
 model_name = 'bert-base-multilingual-cased'
 
 
-def create_model():
+def create_model() -> AutoAdapterModel:
     # prepare model
     config = AutoConfig.from_pretrained(model_name)
     model = AutoAdapterModel.from_pretrained(model_name, config=config)
 
     # add task adapter
     model.add_adapter('sa')
-
-    # set up task adapter
     model.add_classification_head('sa', num_labels=2)
     model.config.prediction_heads['sa']['dropout_prob'] = 0.5
     model.train_adapter(['sa'])

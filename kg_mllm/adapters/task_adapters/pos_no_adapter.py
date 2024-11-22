@@ -1,4 +1,5 @@
 from transformers import (
+    AutoAdapterModel,
     AutoConfig,
     AutoTokenizer,
     BertForSequenceClassification,
@@ -9,13 +10,11 @@ from kg_mllm.train import train_model
 from kg_mllm.util.data import load_train_val_test
 
 # TODO: Consolidate and move to config
-language = 'FOO'
 output_dir = './training_output'
-adapter_dir = ''
 model_name = 'bert-base-multilingual-cased'
 
 
-def create_model():
+def create_model() -> AutoAdapterModel:
     config = AutoConfig.from_pretrained(model_name)
     model = BertForSequenceClassification(config=config)
     model.config.hidden_dropout_prob = 0.5

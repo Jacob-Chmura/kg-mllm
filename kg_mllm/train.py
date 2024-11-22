@@ -1,6 +1,6 @@
 import evaluate
 import numpy as np
-from adapters import AdapterTrainer
+from adapters import AdapterTrainer, AutoAdapterModel
 from datasets import Dataset
 from transfomers import Trainer
 from transformers import TrainingArguments
@@ -16,7 +16,9 @@ save_strategy = 'no'
 weight_decay = 0.01
 
 
-def train_model(model, train_dataset: Dataset, val_dataset: Dataset) -> Trainer:
+def train_model(
+    model: AutoAdapterModel, train_dataset: Dataset, val_dataset: Dataset
+) -> Trainer:
     training_args = TrainingArguments(
         learning_rate=learning_rate,
         num_train_epochs=num_train_epochs,
