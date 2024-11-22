@@ -29,7 +29,6 @@ weight_decay = 0.01
 
 
 def encode_batch(examples: Dict[str, List], tokenizer: Tokenizer) -> Dict[str, List]:
-    """Encodes a batch of input data using the model tokenizer."""
     all_encoded: Dict[str, List] = {'input_ids': [], 'attention_mask': [], 'labels': []}
 
     for text, label in zip(examples['text'], examples['label']):

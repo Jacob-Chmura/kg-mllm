@@ -7,7 +7,12 @@ import numpy as np
 from adapters import AdapterConfig, AdapterTrainer, AutoAdapterModel, Trainer
 from adapters.composition import Stack
 from datasets import Dataset, load_dataset
-from transformers import AutoConfig, AutoTokenizer, TrainingArguments
+from transformers import (
+    AutoConfig,
+    AutoTokenizer,
+    Tokenizer,
+    TrainingArguments,
+)
 
 # TODO: Consolidate and move to config
 language = 'FOO'
@@ -24,10 +29,8 @@ save_strategy = 'no'
 weight_decay = 0.01
 
 
-def encode_batch(examples: Dict[str, List]) -> Dict[str, List]:
-    """Encodes a batch of input data using the model tokenizer."""
+def encode_batch(examples: Dict[str, List], tokenizer: Tokenizer) -> Dict[str, List]:
     all_encoded: Dict[str, List] = {'input_ids': [], 'attention_mask': [], 'labels': []}
-    tokenizer = AutoTokenizer.from_pretrained('bert-base-multilingual-cased')
 
     for text, label in zip(examples['text'], examples['label']):
         encoded = tokenizer(
@@ -43,8 +46,8 @@ def encode_batch(examples: Dict[str, List]) -> Dict[str, List]:
     return all_encoded
 
 
-def preprocess_dataset(dataset: Dataset) -> Dataset:
-    dataset = dataset.map(encode_batch, batched=True)
+def preprocess_dataset(dataset: Dataset, tokenizer: Tokenizer) -> Dataset:
+    dataset = dataset.map(lambda sample: encode_batch(sample, tokenizer), batched=True)
     dataset.set_format(columns=['input_ids', 'attention_mask', 'labels'])
     return dataset
 
@@ -72,16 +75,16 @@ def main() -> None:
     config = AutoConfig.from_pretrained(model_name)
     model = AutoAdapterModel.from_pretrained(model_name, config=config)
 
-    # prepare data
     dataset = load_dataset(f'dgurgurov/{language}_sa')
-
     train_dataset = dataset['train']
     val_dataset = dataset['validation']
     test_dataset = dataset['test']
 
-    train_dataset = preprocess_dataset(train_dataset)
-    val_dataset = preprocess_dataset(val_dataset)
-    test_dataset = preprocess_dataset(test_dataset)
+    tokenizer = AutoTokenizer.from_pretrained('bert-base-multilingual-cased')
+
+    train_dataset = preprocess_dataset(train_dataset, tokenizer)
+    val_dataset = preprocess_dataset(val_dataset, tokenizer)
+    test_dataset = preprocess_dataset(test_dataset, tokenizer)
 
     # load pre-trained language adapter
     lang_adapter_config = AdapterConfig.load(adapter_config)
