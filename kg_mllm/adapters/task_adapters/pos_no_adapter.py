@@ -15,8 +15,7 @@ from transformers import (
 
 
 def parse_arguments():
-    parser = argparse.ArgumentParser(
-        description='Fine-tune a model for a POS.')
+    parser = argparse.ArgumentParser(description='Fine-tune a model for a POS.')
     parser.add_argument(
         '--output_dir',
         type=str,
@@ -29,10 +28,12 @@ def parse_arguments():
         default='bert-base-multilingual-cased',
         help='Name of the pre-trained model',
     )
-    parser.add_argument('--learning_rate', type=float, default=1e-4,
-                        help='Learning rate for training')
-    parser.add_argument('--num_train_epochs', type=int, default=50,
-                        help='Number of training epochs')
+    parser.add_argument(
+        '--learning_rate', type=float, default=1e-4, help='Learning rate for training'
+    )
+    parser.add_argument(
+        '--num_train_epochs', type=int, default=50, help='Number of training epochs'
+    )
     parser.add_argument(
         '--per_device_train_batch_size',
         type=int,
@@ -57,10 +58,10 @@ def parse_arguments():
         default='no',
         help='Saving strategy during training',
     )
-    parser.add_argument('--weight_decay', type=float, default=0.01,
-                        help='Weight decay for optimization')
-    parser.add_argument('--language', type=str,
-                        help='Language for fine-tuning')
+    parser.add_argument(
+        '--weight_decay', type=float, default=0.01, help='Weight decay for optimization'
+    )
+    parser.add_argument('--language', type=str, help='Language for fine-tuning')
     return parser.parse_args()
 
 
@@ -83,8 +84,7 @@ def encode_batch(examples, tokenizer):
 
 
 def preprocess_dataset(dataset, tokenizer):
-    dataset = dataset.map(lambda sample: encode_batch(sample, tokenizer),
-                          batched=True)
+    dataset = dataset.map(lambda sample: encode_batch(sample, tokenizer), batched=True)
     dataset.set_format(columns=['input_ids', 'attention_mask', 'labels'])
     return dataset
 
@@ -95,8 +95,7 @@ def calculate_f1_on_test_set(trainer, test_dataset):
 
     f1_metric = evaluate.load('f1')
     test_metrics = {
-        'f1':
-        f1_metric.compute(
+        'f1': f1_metric.compute(
             predictions=np.argmax(test_predictions.predictions, axis=-1),
             references=test_predictions.label_ids,
             average='macro',
@@ -150,8 +149,7 @@ def main():
         train_dataset=train_dataset,
         eval_dataset=val_dataset,
         compute_metrics=lambda pred: {
-            'f1':
-            f1_metric.compute(
+            'f1': f1_metric.compute(
                 predictions=np.argmax(pred.predictions, axis=-1),
                 references=pred.label_ids,
                 average='macro',
@@ -165,8 +163,7 @@ def main():
     # test model
     output_file_path = os.path.join(args.output_dir, 'test_metrics.json')
     with open(output_file_path, 'w') as json_file:
-        json.dump(calculate_f1_on_test_set(trainer, test_dataset), json_file,
-                  indent=2)
+        json.dump(calculate_f1_on_test_set(trainer, test_dataset), json_file, indent=2)
 
 
 if __name__ == '__main__':
