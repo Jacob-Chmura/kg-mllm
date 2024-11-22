@@ -20,6 +20,7 @@ https://huggingface.co/models?filter=fill-mask
 """
 # You can also adapt this script on your own masked language modeling task.
 
+# mypy: allow-untyped-defs
 import logging
 import math
 import os
@@ -127,7 +128,7 @@ class ModelArguments:
         },
     )
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.config_overrides is not None and (
             self.config_name is not None or self.model_name_or_path is not None
         ):
@@ -225,7 +226,7 @@ class DataTrainingArguments:
         },
     )
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if (
             self.dataset_name is None
             and self.train_file is None
