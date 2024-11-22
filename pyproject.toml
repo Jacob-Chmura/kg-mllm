@@ -9,8 +9,12 @@ authors = [
     { name = "Jacob Chmura", email = "jacobpaul.chmura@gmail.com" },
 ]
 dependencies = [
+    "adapters>=1.0.1",
+    "datasets>=3.1.0",
+    "evaluate>=0.4.3",
     "numpy>=2.0.2",
     "torch>=2.5.1",
+    "transformers>=4.45.2",
 ]
 
 [build-system]
