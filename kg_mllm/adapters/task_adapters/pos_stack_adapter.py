@@ -1,21 +1,18 @@
 import argparse
+import json
+import os
+
 import evaluate
 import numpy as np
-import os
-import json
-
-from datasets import load_dataset
-from transformers import AutoTokenizer, AutoConfig, TrainingArguments
-from adapters import AutoAdapterModel
+from adapters import AdapterConfig, AdapterTrainer, AutoAdapterModel
 from adapters.composition import Stack
-from adapters import AdapterConfig
-from adapters import AdapterTrainer
+from datasets import load_dataset
+from transformers import AutoConfig, AutoTokenizer, TrainingArguments
 
 
 def parse_arguments():
     parser = argparse.ArgumentParser(
-        description='Fine-tune a model for a Part-of-Speech task.'
-    )
+        description='Fine-tune a model for a Part-of-Speech task.')
     parser.add_argument(
         '--output_dir',
         type=str,
@@ -38,12 +35,10 @@ def parse_arguments():
         default='bert-base-multilingual-cased',
         help='Name of the pre-trained model',
     )
-    parser.add_argument(
-        '--learning_rate', type=float, default=1e-4, help='Learning rate for training'
-    )
-    parser.add_argument(
-        '--num_train_epochs', type=int, default=50, help='Number of training epochs'
-    )
+    parser.add_argument('--learning_rate', type=float, default=1e-4,
+                        help='Learning rate for training')
+    parser.add_argument('--num_train_epochs', type=int, default=50,
+                        help='Number of training epochs')
     parser.add_argument(
         '--per_device_train_batch_size',
         type=int,
@@ -68,10 +63,10 @@ def parse_arguments():
         default='no',
         help='Saving strategy during training',
     )
-    parser.add_argument(
-        '--weight_decay', type=float, default=0.01, help='Weight decay for optimization'
-    )
-    parser.add_argument('--language', type=str, default='', help='Language at hand')
+    parser.add_argument('--weight_decay', type=float, default=0.01,
+                        help='Weight decay for optimization')
+    parser.add_argument('--language', type=str, default='',
+                        help='Language at hand')
     return parser.parse_args()
 
 
@@ -106,7 +101,8 @@ def calculate_f1_on_test_set(trainer, test_dataset, tokenizer):
 
     f1_metric = evaluate.load('f1')
     test_metrics = {
-        'f1': f1_metric.compute(
+        'f1':
+        f1_metric.compute(
             predictions=np.argmax(test_predictions.predictions, axis=-1),
             references=test_predictions.label_ids,
             average='macro',
@@ -179,7 +175,8 @@ def main():
         train_dataset=train_dataset,
         eval_dataset=val_dataset,
         compute_metrics=lambda pred: {
-            'f1': f1_metric.compute(
+            'f1':
+            f1_metric.compute(
                 predictions=np.argmax(pred.predictions, axis=-1),
                 references=pred.label_ids,
                 average='macro',
