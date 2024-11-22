@@ -1,16 +1,17 @@
 import argparse
 import json
 import os
+from typing import Dict, List
 
 import evaluate
 import numpy as np
-from adapters import AdapterConfig, AdapterTrainer, AutoAdapterModel
+from adapters import AdapterConfig, AdapterTrainer, AutoAdapterModel, Trainer
 from adapters.composition import Stack
-from datasets import load_dataset
+from datasets import Dataset, load_dataset
 from transformers import AutoConfig, AutoTokenizer, TrainingArguments
 
 
-def parse_arguments():
+def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Fine-tune a model for a POS.')
     parser.add_argument(
         '--output_dir',
@@ -71,9 +72,9 @@ def parse_arguments():
     return parser.parse_args()
 
 
-def encode_batch(examples):
+def encode_batch(examples: Dict[str, List]) -> Dict[str, List]:
     """Encodes a batch of input data using the model tokenizer."""
-    all_encoded = {'input_ids': [], 'attention_mask': [], 'labels': []}
+    all_encoded: Dict[str, List] = {'input_ids': [], 'attention_mask': [], 'labels': []}
     tokenizer = AutoTokenizer.from_pretrained('bert-base-multilingual-cased')
 
     for text, label in zip(examples['text'], examples['label']):
@@ -90,13 +91,15 @@ def encode_batch(examples):
     return all_encoded
 
 
-def preprocess_dataset(dataset):
+def preprocess_dataset(dataset: Dataset) -> Dataset:
     dataset = dataset.map(encode_batch, batched=True)
     dataset.set_format(columns=['input_ids', 'attention_mask', 'labels'])
     return dataset
 
 
-def calculate_f1_on_test_set(trainer, test_dataset):
+def calculate_f1_on_test_set(
+    trainer: Trainer, test_dataset: Dataset
+) -> Dict[str, float]:
     print('Calculating F1 score on the test set...')
     test_predictions = trainer.predict(test_dataset)
 
@@ -113,7 +116,7 @@ def calculate_f1_on_test_set(trainer, test_dataset):
     return test_metrics
 
 
-def main():
+def main() -> None:
     args = parse_arguments()
 
     config = AutoConfig.from_pretrained(args.model_name)
