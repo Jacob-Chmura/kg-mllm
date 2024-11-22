@@ -16,7 +16,7 @@ from transformers import (
 
 def parse_arguments():
     parser = argparse.ArgumentParser(
-        description='Fine-tune a model for a sentiment analysis task.')
+        description='Fine-tune a model for a POS.')
     parser.add_argument(
         '--output_dir',
         type=str,
@@ -163,7 +163,6 @@ def main():
     trainer.train()
 
     # test model
-    calculate_f1_on_test_set(trainer, test_dataset)
     output_file_path = os.path.join(args.output_dir, 'test_metrics.json')
     with open(output_file_path, 'w') as json_file:
         json.dump(calculate_f1_on_test_set(trainer, test_dataset), json_file,

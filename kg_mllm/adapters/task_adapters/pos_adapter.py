@@ -11,7 +11,7 @@ from transformers import AutoConfig, AutoTokenizer, TrainingArguments
 
 def parse_arguments():
     parser = argparse.ArgumentParser(
-        description='Fine-tune a model for a Part-of-Speech task.')
+        description='Fine-tune a model for a POS.')
     parser.add_argument('--language', type=str, default='',
                         help='Language at hand')
     parser.add_argument(
@@ -90,7 +90,7 @@ def preprocess_dataset(dataset):
     return dataset
 
 
-def calculate_f1_on_test_set(trainer, test_dataset, tokenizer):
+def calculate_f1_on_test_set(trainer, test_dataset):
     print('Calculating F1 score on the test set...')
     test_predictions = trainer.predict(test_dataset)
 
@@ -117,8 +117,6 @@ def main():
     train_dataset = dataset['train']
     val_dataset = dataset['validation']
     test_dataset = dataset['test']
-
-    tokenizer = AutoTokenizer.from_pretrained(args.model_name)
 
     train_dataset = preprocess_dataset(train_dataset)
     val_dataset = preprocess_dataset(val_dataset)
@@ -169,17 +167,14 @@ def main():
         },
     )
 
+    # train model
     trainer.train()
 
-    calculate_f1_on_test_set(trainer, test_dataset, tokenizer)
-
+    # test model
     output_file_path = os.path.join(args.output_dir, 'test_metrics.json')
     with open(output_file_path, 'w') as json_file:
-        json.dump(
-            calculate_f1_on_test_set(trainer, test_dataset, tokenizer),
-            json_file,
-            indent=2,
-        )
+        json.dump(calculate_f1_on_test_set(trainer, test_dataset), json_file,
+                  indent=2)
 
 
 if __name__ == '__main__':
