@@ -1,7 +1,21 @@
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
-from datasets import Dataset
+from datasets import Dataset, load_dataset
 from transformers import Tokenizer
+
+
+def load_train_val_test(tokenizer: Tokenizer) -> Tuple[Dataset, Dataset, Dataset]:
+    language = 'TODO'
+    dataset: Dataset = load_dataset(f'dgurgurov/{language}_sa')
+    train_dataset = dataset['train']
+    val_dataset = dataset['validation']
+    test_dataset = dataset['test']
+
+    train_dataset = tokenize_dataset(train_dataset, tokenizer)
+    val_dataset = tokenize_dataset(val_dataset, tokenizer)
+    test_dataset = tokenize_dataset(test_dataset, tokenizer)
+
+    return train_dataset, val_dataset, test_dataset
 
 
 def tokenize_dataset(dataset: Dataset, tokenizer: Tokenizer) -> Dataset:

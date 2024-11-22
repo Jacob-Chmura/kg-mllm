@@ -1,11 +1,10 @@
 import evaluate
 import numpy as np
 from adapters import AdapterTrainer, AutoAdapterModel
-from datasets import load_dataset
 from transformers import AutoConfig, AutoTokenizer, TrainingArguments
 
 from kg_mllm.test import evaluate_model
-from kg_mllm.util.data import tokenize_dataset
+from kg_mllm.util.data import load_train_val_test
 
 # TODO: Consolidate and move to config
 language = 'FOO'
@@ -40,16 +39,8 @@ def create_model():
 def main() -> None:
     model = create_model()
 
-    dataset = load_dataset(f'dgurgurov/{language}_sa')
-    train_dataset = dataset['train']
-    val_dataset = dataset['validation']
-    test_dataset = dataset['test']
-
     tokenizer = AutoTokenizer.from_pretrained('bert-base-multilingual-cased')
-
-    train_dataset = tokenize_dataset(train_dataset, tokenizer)
-    val_dataset = tokenize_dataset(val_dataset, tokenizer)
-    test_dataset = tokenize_dataset(test_dataset, tokenizer)
+    train_dataset, val_dataset, test_dataset = load_train_val_test(tokenizer)
 
     training_args = TrainingArguments(
         learning_rate=learning_rate,
