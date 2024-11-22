@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Dict, List
+from typing import Dict
 
 import evaluate
 import numpy as np
@@ -9,10 +9,11 @@ from transformers import (
     AutoConfig,
     AutoTokenizer,
     BertForSequenceClassification,
-    Tokenizer,
     Trainer,
     TrainingArguments,
 )
+
+from kg_mllm.util.data import tokenize_dataset
 
 # TODO: Consolidate and move to config
 language = 'FOO'
@@ -26,29 +27,6 @@ per_device_eval_batch_size = 32
 evaluation_strategy = 'epoch'
 save_strategy = 'no'
 weight_decay = 0.01
-
-
-def encode_batch(examples: Dict[str, List], tokenizer: Tokenizer) -> Dict[str, List]:
-    all_encoded: Dict[str, List] = {'input_ids': [], 'attention_mask': [], 'labels': []}
-
-    for text, label in zip(examples['text'], examples['label']):
-        encoded = tokenizer(
-            text,
-            max_length=512,
-            truncation=True,
-            padding='max_length',
-        )
-        all_encoded['input_ids'].append(encoded['input_ids'])
-        all_encoded['attention_mask'].append(encoded['attention_mask'])
-        all_encoded['labels'].append(label)
-
-    return all_encoded
-
-
-def preprocess_dataset(dataset: Dataset, tokenizer: Tokenizer) -> Dataset:
-    dataset = dataset.map(lambda sample: encode_batch(sample, tokenizer), batched=True)
-    dataset.set_format(columns=['input_ids', 'attention_mask', 'labels'])
-    return dataset
 
 
 def calculate_f1_on_test_set(
@@ -78,9 +56,9 @@ def main() -> None:
 
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
-    train_dataset = preprocess_dataset(train_dataset, tokenizer)
-    val_dataset = preprocess_dataset(val_dataset, tokenizer)
-    test_dataset = preprocess_dataset(test_dataset, tokenizer)
+    train_dataset = tokenize_dataset(train_dataset, tokenizer)
+    val_dataset = tokenize_dataset(val_dataset, tokenizer)
+    test_dataset = tokenize_dataset(test_dataset, tokenizer)
 
     # prepare model
     config = AutoConfig.from_pretrained(model_name)
