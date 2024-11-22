@@ -1,4 +1,3 @@
-import argparse
 import json
 import os
 from typing import Dict, List
@@ -10,66 +9,19 @@ from adapters.composition import Stack
 from datasets import Dataset, load_dataset
 from transformers import AutoConfig, AutoTokenizer, TrainingArguments
 
-
-def parse_arguments() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description='Fine-tune a model for a POS.')
-    parser.add_argument(
-        '--output_dir',
-        type=str,
-        default='./training_output',
-        help='Output directory for training results',
-    )
-    parser.add_argument(
-        '--adapter_dir',
-        type=str,
-        help='Directory containing the pre-trained adapter checkpoint',
-    )
-    parser.add_argument(
-        '--adapter_config',
-        type=str,
-        help='Directory containing the pre-trained adapter config',
-    )
-    parser.add_argument(
-        '--model_name',
-        type=str,
-        default='bert-base-multilingual-cased',
-        help='Name of the pre-trained model',
-    )
-    parser.add_argument(
-        '--learning_rate', type=float, default=1e-4, help='Learning rate for training'
-    )
-    parser.add_argument(
-        '--num_train_epochs', type=int, default=50, help='Number of training epochs'
-    )
-    parser.add_argument(
-        '--per_device_train_batch_size',
-        type=int,
-        default=32,
-        help='Batch size per device during training',
-    )
-    parser.add_argument(
-        '--per_device_eval_batch_size',
-        type=int,
-        default=32,
-        help='Batch size per device during evaluation',
-    )
-    parser.add_argument(
-        '--evaluation_strategy',
-        type=str,
-        default='epoch',
-        help='Evaluation strategy during training',
-    )
-    parser.add_argument(
-        '--save_strategy',
-        type=str,
-        default='no',
-        help='Saving strategy during training',
-    )
-    parser.add_argument(
-        '--weight_decay', type=float, default=0.01, help='Weight decay for optimization'
-    )
-    parser.add_argument('--language', type=str, default='', help='Language at hand')
-    return parser.parse_args()
+# TODO: Consolidate and move to config
+language = 'FOO'
+output_dir = './training_output'
+adapter_dir = ''
+adapter_config = 'BAR'
+model_name = 'bert-base-multilingual-cased'
+learning_rate = 1e-4
+num_train_epochs = 50
+per_device_train_batch_size = 32
+per_device_eval_batch_size = 32
+evaluation_strategy = 'epoch'
+save_strategy = 'no'
+weight_decay = 0.01
 
 
 def encode_batch(examples: Dict[str, List]) -> Dict[str, List]:
@@ -117,13 +69,11 @@ def calculate_f1_on_test_set(
 
 
 def main() -> None:
-    args = parse_arguments()
-
-    config = AutoConfig.from_pretrained(args.model_name)
-    model = AutoAdapterModel.from_pretrained(args.model_name, config=config)
+    config = AutoConfig.from_pretrained(model_name)
+    model = AutoAdapterModel.from_pretrained(model_name, config=config)
 
     # prepare data
-    dataset = load_dataset(f'dgurgurov/{args.language}_sa')
+    dataset = load_dataset(f'dgurgurov/{language}_sa')
 
     train_dataset = dataset['train']
     val_dataset = dataset['validation']
@@ -134,9 +84,9 @@ def main() -> None:
     test_dataset = preprocess_dataset(test_dataset)
 
     # load pre-trained language adapter
-    lang_adapter_config = AdapterConfig.load(args.adapter_config)
+    lang_adapter_config = AdapterConfig.load(adapter_config)
     model.load_adapter(
-        args.adapter_dir,
+        adapter_dir,
         config=lang_adapter_config,
         load_as='lang_adapter',
         with_head=False,
@@ -156,14 +106,14 @@ def main() -> None:
     print(model.adapter_summary())
 
     training_args = TrainingArguments(
-        learning_rate=args.learning_rate,
-        num_train_epochs=args.num_train_epochs,
-        per_device_train_batch_size=args.per_device_train_batch_size,
-        per_device_eval_batch_size=args.per_device_eval_batch_size,
-        evaluation_strategy=args.evaluation_strategy,
-        save_strategy=args.save_strategy,
-        weight_decay=args.weight_decay,
-        output_dir=args.output_dir,
+        learning_rate=learning_rate,
+        num_train_epochs=num_train_epochs,
+        per_device_train_batch_size=per_device_train_batch_size,
+        per_device_eval_batch_size=per_device_eval_batch_size,
+        evaluation_strategy=evaluation_strategy,
+        save_strategy=save_strategy,
+        weight_decay=weight_decay,
+        output_dir=output_dir,
         overwrite_output_dir=True,
         save_total_limit=1,
         load_best_model_at_end=True,
@@ -189,7 +139,7 @@ def main() -> None:
     trainer.train()
 
     # test model
-    output_file_path = os.path.join(args.output_dir, 'test_metrics.json')
+    output_file_path = os.path.join(output_dir, 'test_metrics.json')
     with open(output_file_path, 'w') as json_file:
         json.dump(calculate_f1_on_test_set(trainer, test_dataset), json_file, indent=2)
 
